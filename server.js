@@ -13,12 +13,25 @@ const director = require('./routes/director');
 const app = express();
 
 // Allow frontend apps from other origins to call this API.
-// app.use(cors());
+// The earlier configuration was too restrictive and didn't handle preflight
+// OPTIONS requests.  Render (and many CDNs) will send an OPTIONS request
+// before POSTing JSON; if the CORS middleware doesn't answer that request
+// the browser complains about missing headers.
+//
+// Here we explicitly allow the Netlify origin, enable common headers, and
+// make sure every OPTIONS route is handled by CORS.  You can tighten this
+// later, but the important part is that the middleware runs for every request.
 
 app.use(cors({
   origin: "https://karibugroceriesltd.netlify.app",
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
+}));
+
+// also respond to preflight across the board
+app.options("*", cors({
+  origin: "https://karibugroceriesltd.netlify.app"
 }));
 
 // Parse incoming JSON and form data.
